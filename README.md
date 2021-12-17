@@ -1,7 +1,7 @@
 # ![Docker-LAMP][logo]
-Docker-LAMP is a set of docker images that include the phusion baseimage (14.04, 16.04 and 18.04 varieties), along with a LAMP stack ([Apache][apache], [MySQL][mysql] and [PHP][php]) all in one handy package.
+Docker-LAMP is a set of docker images that include the phusion baseimage (18.04 and 20.04 varieties), along with a LAMP stack ([Apache][apache], [MySQL][mysql] and [PHP][php]) all in one handy package.
 
-With Ubuntu **18.04** amd **16.04** images on the `latest-1804` and `latest-1604` tags, Docker-LAMP is flexible enough to use with all of your LAMP projects.
+With Ubuntu **20.04** and **18.04** images on the `latest-2004` and `latest-1804` tags, Docker-LAMP is flexible enough to use with all of your LAMP projects.
 
 [![Build Status][shield-build-status]][info-build-status]
 [![Docker Hub][shield-docker-hub]][info-docker-hub]
@@ -33,8 +33,8 @@ With Ubuntu **18.04** amd **16.04** images on the `latest-1804` and `latest-1604
   - [One-line testing command](#one-line-testing-command)
     - [`docker-compose -f docker-compose.test.yml -p ci build;`](#docker-compose--f-docker-composetestyml--p-ci-build)
     - [`docker-compose -f docker-compose.test.yml -p ci up -d;`](#docker-compose--f-docker-composetestyml--p-ci-up--d)
-    - [`docker logs -f ci_sut_1;`](#docker-logs--f-ci_sut_1)
-    - [`echo "Exited with status code: $(docker wait ci_sut_1)"`](#echo-exited-with-status-code-docker-wait-ci_sut_1)
+    - [`cd tests && ./test.sh;`](#cd-tests--testsh)
+    - [`echo "Exited with status code: $?"`](#echo-exited-with-status-code-)
 - [Inspiration](#inspiration)
 - [Contributing](#contributing)
 - [License](#license)
@@ -46,40 +46,49 @@ As a developer, part of my day to day role is to build LAMP applications. I sear
 
 To complicate things even further I needed an image, or actually two, that would run my applications on both 14.04 and 16.04. Having two entirely separate workflows didn't make any sense to me, and Docker-LAMP was born.
 
-Designed to be a single interface that just 'gets out of your way', and works on 14.04 and 16.04 with php 5 and 7. You can move between all 4 images without changing how you work with Docker.
+Designed to be a single interface that just 'gets out of your way', and works on 18.04 and 20.04 with php 7 and 8. You can move between all images without changing how you work with Docker.
 
 ## Image Versions
-> **NOTE:** [PHP 5.6 is end of life][end-of-life], so the PHP 5 images `mattrayner/lamp:latest-1404-php5` and `mattrayner/lamp:latest-1604-php5` will not receive any updates. Although these images will stay on Docker Hub, we **strongly** recommend updating you applications to PHP7.
+> **NOTE:** [PHP 5.6 is end of life][end-of-life], so the PHP 5 images `mattrayner/lamp:latest-1404-php5` and `mattrayner/lamp:latest-1604-php5` will not receive any updates. Although these images will stay on Docker Hub, we **strongly** recommend updating you applications to PHP 7 or PHP 8.
 
-> **NOTE**: The 14.04 variant of this image is no longer being actively supported for updated
+> **NOTE**: The 14.04 and 16.04 variants of this image are no longer being actively supported or updated.
 
-There are 4 main 'versions' of the docker image. The table below shows the different tags you can use, along with the PHP, MySQL and Apache versions that come with it.
+There are four main 'versions' of the docker image. The table below shows the different tags you can use, along with the PHP, MySQL and Apache versions that come with it.
 
-Component | `latest-1404` | `latest-1604` | `latest-1804`
----|---|---|---
-[Apache][apache] | `2.4.7` | `2.4.18` | `2.4.29`
-[MySQL][mysql] | `5.5.62` | `5.7.26` | `5.7.26`
-[PHP][php] | `7.3.3` | `7.3.6` | `7.3.6`
-[phpMyAdmin][phpmyadmin] | `4.8.5` | `4.9.0.1` | `4.9.0.1`
+Component | `latest-1404` | `latest-1604` | `latest-1804-php7` `latest-1804-php8` | `latest-2004-php7` `latest-2004-php8`
+---|---|---|---|---
+[Apache][apache] | `2.4.7` | `2.4.18` | `2.4.29` | `2.4.41`
+[MySQL][mysql] | `5.5.62` | `5.7.30` | `5.7.35` | `8.0.26`
+[PHP][php] | `7.3.3` | `7.4.6` | `7.4.23`/`8.0.10` | `7.4.23`/`8.0.10`
+[phpMyAdmin][phpmyadmin] | `4.8.5` | `5.0.2` | `5.1.1` | `5.1.1`
 
 
 ## Using the image
 ### On the command line
 This is the quickest way
 ```bash
-# Launch a 18.04 based image
-docker run -p "80:80" -v ${PWD}/app:/app mattrayner/lamp:latest-1804
+# Launch a 20.04 based image with PHP 8
+docker run -p "80:80" -v ${PWD}/app:/app mattrayner/lamp:latest-2004-php8
 
-# Launch a 16.04 based image
+# Launch a 20.04 based image with PHP 7
+docker run -p "80:80" -v ${PWD}/app:/app mattrayner/lamp:latest-2004-php7
+
+# Launch a 18.04 based image with PHP 8
+docker run -p "80:80" -v ${PWD}/app:/app mattrayner/lamp:latest-1804-php8
+
+# Launch a 18.04 based image with PHP 7
+docker run -p "80:80" -v ${PWD}/app:/app mattrayner/lamp:latest-1804-php7
+
+# Launch a 16.04 based image with PHP 7
 docker run -p "80:80" -v ${PWD}/app:/app mattrayner/lamp:latest-1604
 
-# Launch a 14.04 based image
+# Launch a 14.04 based image with PHP 5
 docker run -p "80:80" -v ${PWD}/app:/app mattrayner/lamp:latest-1404
 ```
 
 ### With a Dockerfile
 ```docker
-FROM mattrayner/lamp:latest-1804
+FROM mattrayner/lamp:latest-2004-php8
 
 # Your custom commands
 
@@ -188,28 +197,30 @@ ldi 3000 3306
 git clone https://github.com/mattrayner/docker-lamp.git
 cd docker-lamp
 
-# Build the 18.04, 16.04 image and the 14.04 images
-docker build -t=mattrayner/lamp:latest -f ./1804/Dockerfile-php7 .
-docker build -t=mattrayner/lamp:latest-1604 -f ./1604/Dockerfile-php7 .
-docker build -t=mattrayner/lamp:latest-1404 -f ./1404/Dockerfile-php7 .
+# Build the images
+docker build --build-arg PHP_VERSION=8.0 -t=mattrayner/lamp:latest -f ./2004/Dockerfile .
+docker build --build-arg PHP_VERSION=8.0 -t=mattrayner/lamp:latest-2004-php8 -f ./2004/Dockerfile .
+docker build --build-arg PHP_VERSION=7.4 -t=mattrayner/lamp:latest-2004-php7 -f ./2004/Dockerfile .
+docker build --build-arg PHP_VERSION=8.0 -t=mattrayner/lamp:latest-1804-php8 -f ./1804/Dockerfile .
+docker build --build-arg PHP_VERSION=7.4 -t=mattrayner/lamp:latest-1804-php7 -f ./1804/Dockerfile .
 
-# Run the 14.04 image as a container
-docker run -p "3000:80" mattrayner/lamp:latest-1404 -d
+# Run the image as a container
+docker run -d -p "3000:80" mattrayner/lamp:latest
 
 # Sleep to allow the container to boot
-sleep 5
+sleep 30
 
 # Curl out the contents of our new container
 curl "http://$(docker-machine ip):3000/"
 ```
 
 ### Testing
-We use `docker-compose` to setup, build and run our testing environment. It allows us to offload a large amount of the testing overhead to Docker, and to ensure that we always test our image in a consistent way thats not affected by the host machine.
+We use `docker-compose` to setup, build and run our testing environment. It allows us to offload a large amount of the testing overhead to Docker, and to ensure that we always test our image in a consistent way that's not affected by the host machine.
 
 ### One-line testing command
 We've developed a single-line test command you can run on your machine within the `docker-lamp` directory. This will test any changes that may have been made, as well as comparing installed versions of Apache, MySQL, PHP and phpMyAdmin against those expected.
 ```bash
-docker-compose -f docker-compose.test.yml -p ci build; docker-compose -f docker-compose.test.yml -p ci up -d; docker logs -f ci_sut_1; echo "Exited with status code: $(docker wait ci_sut_1)";
+docker-compose -f docker-compose.test.yml -p ci build; docker-compose -f docker-compose.test.yml -p ci up -d; cd tests && ./test.sh; echo "Exited with status code: $?";
 ```
 
 So what does this command do?
@@ -218,13 +229,13 @@ So what does this command do?
 First, build that latest version of our docker-compose images.
 
 #### `docker-compose -f docker-compose.test.yml -p ci up -d;`
-Launch our docker containers (`web1804`, `web1604`, `web1404` and `sut` or *system under tests*) in daemon mode.
+Launch our docker containers (`web2004-php8` etc.) in daemon mode.
 
-#### `docker logs -f ci_sut_1;`
-Display all of the logging output from the `sut` container (extremely useful for debugging)
+#### `cd tests && ./test.sh;`
+Change into the test directory and run out tests
 
-#### `echo "Exited with status code: $(docker wait ci_sut_1)"`
-Report back the status code that the `sut` container ended with.
+#### `echo "Exited with status code: $?"`
+Report back whether the tests passed or not
 
 
 ## Inspiration
