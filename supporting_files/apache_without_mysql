@@ -1,0 +1,33 @@
+<VirtualHost *:80>
+        ServerAdmin webmaster@localhost
+
+        DocumentRoot /var/www/html
+        <Directory />
+                Options Indexes FollowSymLinks MultiViews
+                # To make wordpress .htaccess work
+                AllowOverride All
+                Order allow,deny
+                allow from all
+        </Directory>
+        <Directory /var/www/html>
+                Options Indexes FollowSymLinks MultiViews
+                # To make wordpress .htaccess work
+                AllowOverride All
+                Order allow,deny
+                allow from all
+        </Directory>
+
+        ErrorLog /proc/self/fd/2
+
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel warn
+
+        CustomLog /proc/self/fd/1 combined
+
+        #
+        # Set HTTPS environment variable if we came in over secure
+        #  channel.
+        SetEnvIf x-forwarded-proto https HTTPS=on
+
+</VirtualHost>
